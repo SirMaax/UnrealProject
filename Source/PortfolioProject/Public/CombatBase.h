@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "AnimatorComponent.h"
 #include "EnhancedInputComponent.h"
+#include "HeatlhComponent.h"
 #include "Components/ActorComponent.h"
 #include "CombatBase.generated.h"
 
@@ -25,8 +27,11 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void Attack(const FInputActionValue& Value);
-	void Block(const FInputActionValue& Value);
+	
+	UMeshComponent* HitboxMesh;
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 # pragma region Block
 private:
@@ -46,7 +51,29 @@ private:
 public:
 	void StartBlocking();
 	void EndBlocking();
+	void GettingAttacked();
+# pragma endregion
+
+# pragma region Attack
+	void Attack(const FInputActionValue& Value);
+	void AttackOver();
+	
+	UMeshComponent* WeaponMesh;
+	bool bIsAttacking;	
 # pragma endregion 
 
+
+# pragma region Behavior
+	// UPROPERTY(EditAnywhere, Category="Behavior")
+	
+# pragma endregion 
+
+# pragma region References
+private:
+	UHealthComponent * health;
+	UAnimatorComponent * AnimatorComponent;
+	// UPROPERTY(EditAnywhere, Category="Behavior")
+	# pragma endregion
+	
 	
 };

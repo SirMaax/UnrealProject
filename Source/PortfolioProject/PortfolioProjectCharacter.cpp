@@ -57,6 +57,15 @@ APortfolioProjectCharacter::APortfolioProjectCharacter()
 	
 }
 
+void APortfolioProjectCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if(!AnimatorComponent)return;
+	AnimatorComponent->Speed = GetCharacterMovement()->Velocity.Length();
+	UE_LOG(LogTemp, Warning, TEXT("Speed %f"), GetCharacterMovement()->Velocity.Length());
+}
+
+
 void APortfolioProjectCharacter::BeginPlay()
 {
 	// Call the base class
@@ -75,7 +84,7 @@ void APortfolioProjectCharacter::BeginPlay()
 	// this->GetComponentByClass(base);
 	// combatbase = Cast<UCombatBase>(base);
 	baseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	UE_LOG(LogTemp, Warning, TEXT("%f"),baseWalkSpeed);
+	AnimatorComponent  = Cast<UAnimatorComponent>(GetComponentByClass(UAnimatorComponent::StaticClass()));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -164,3 +173,5 @@ void APortfolioProjectCharacter::Sprint(const FInputActionValue& Value)
 		bIsSprinting = true;
 	}
 }
+
+

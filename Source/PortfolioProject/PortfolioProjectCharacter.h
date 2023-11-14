@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
-
+#include "GameFramework/Actor.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
@@ -56,8 +56,8 @@ class APortfolioProjectCharacter : public ACharacter
 	UInputAction* AttackAction;
 public:
 	APortfolioProjectCharacter();
+	virtual void Tick(float DeltaSeconds) override;
 	
-
 protected:
 
 	/** Called for movement input */
@@ -99,7 +99,8 @@ public:
 
 	
  
-#pragma endregion 
-	
+#pragma endregion
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimatorComponent * AnimatorComponent;
 };
 
