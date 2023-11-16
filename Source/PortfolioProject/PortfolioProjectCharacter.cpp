@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+#include "EngineUtils.h"
 #include "PortfolioProjectCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -10,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Kismet/GameplayStatics.h"
 #include "Public/CombatBase.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -62,7 +64,8 @@ void APortfolioProjectCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if(!AnimatorComponent)return;
 	AnimatorComponent->Speed = GetCharacterMovement()->Velocity.Length();
-	UE_LOG(LogTemp, Warning, TEXT("Speed %f"), GetCharacterMovement()->Velocity.Length());
+	if(CurrentFollowedActor)LockOn();
+	// UE_LOG(LogTemp, Warning, TEXT("Speed %f"), GetCharacterMovement()->Velocity.Length());
 }
 
 
@@ -80,11 +83,13 @@ void APortfolioProjectCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	// TSubclassOf<UActorComponent> base;
-	// this->GetComponentByClass(base);
-	// combatbase = Cast<UCombatBase>(base);
+	
 	baseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	AnimatorComponent  = Cast<UAnimatorComponent>(GetComponentByClass(UAnimatorComponent::StaticClass()));
+	TArray<AActor*> list;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld() ,FName("Enemy"),list);
+	if(!list.IsEmpty())OnlyEnemy = list[0];
+	camera = this->FindComponentByClass<UCameraComponent>();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,7 +118,7 @@ void APortfolioProjectCharacter::SetupPlayerInputComponent(UInputComponent* Play
 		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Started, combatBase, &UCombatBase::StartBlocking);
 		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Completed, combatBase, &UCombatBase::EndBlocking);
 
-
+		EnhancedInputComponent->BindAction(LookOnAction, ETriggerEvent::Triggered, this, &APortfolioProjectCharacter::ToggleLockOn);
 		// }
 		
 	}
@@ -130,8 +135,10 @@ void APortfolioProjectCharacter::Move(const FInputActionValue& Value)
 
 	if (Controller != nullptr)
 	{
+		FRotator Rotation;
 		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
+		if(CurrentFollowedActor)Rotation = GetActorRotation();
+		else Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
@@ -149,8 +156,8 @@ void APortfolioProjectCharacter::Move(const FInputActionValue& Value)
 void APortfolioProjectCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
+	if(CurrentFollowedActor)return;
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
@@ -172,6 +179,39 @@ void APortfolioProjectCharacter::Sprint(const FInputActionValue& Value)
 		GetCharacterMovement()->MaxWalkSpeed = baseWalkSpeed * sprintSpeedMultiplier;
 		bIsSprinting = true;
 	}
+}
+
+void APortfolioProjectCharacter::ToggleLockOn(const FInputActionValue& Value)
+{
+	if(CurrentFollowedActor)
+	{
+		CurrentFollowedActor = NULL;
+		USpringArmComponent* SpringArm = camera->GetOwner()->FindComponentByClass<USpringArmComponent>();
+		SpringArm->bUsePawnControlRotation = true;
+	}
+	else
+	{
+		float dotProduct = FVector::DotProduct(camera->GetForwardVector(),OnlyEnemy->GetActorLocation() - GetActorLocation());
+		//Check if actor is looking in the right direction
+		if(dotProduct > 0.2)CurrentFollowedActor = OnlyEnemy;
+	}
+}
+
+void APortfolioProjectCharacter::LockOn()
+{
+	//Change rotation of character to face other actor
+	FVector direction = CurrentFollowedActor->GetActorLocation() - GetActorLocation();
+	FRotator cameraRotation = direction.Rotation();
+	direction.Z = 0;
+	FRotator newRotation = direction.Rotation();
+	direction.Normalize();
+	SetActorRotation(newRotation);
+	// FVector newCamDistance = direction * -500 + GetActorLocation();
+	USpringArmComponent* SpringArm = camera->GetOwner()->FindComponentByClass<USpringArmComponent>();
+	SpringArm->bUsePawnControlRotation = false;
+
+	camera->SetWorldRotation(cameraRotation);
+
 }
 
 

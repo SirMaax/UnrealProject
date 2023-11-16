@@ -58,14 +58,17 @@ public:
 	void Attack(const FInputActionValue& Value);
 	void AttackOver();
 	
-	UMeshComponent* WeaponMesh;
+	UStaticMeshComponent* WeaponMesh;
 	bool bIsAttacking;	
 # pragma endregion 
 
 
 # pragma region Behavior
-	// UPROPERTY(EditAnywhere, Category="Behavior")
-	
+	UPROPERTY(EditAnywhere, Category="Behavior")
+	float InvinibleTimeAfterHit;
+	FTimerHandle InvincibleTimeCountdown;
+	bool bIFramesActive;
+	void CanBeHitAgain();
 # pragma endregion 
 
 # pragma region References

@@ -41,6 +41,7 @@ void UHealthComponent::UpdateHealth(float amount)
 
 void UHealthComponent::GettingHit()
 {
+	if(!AnimatorComponent)return;
 	AnimatorComponent->GotHit();
 }
 

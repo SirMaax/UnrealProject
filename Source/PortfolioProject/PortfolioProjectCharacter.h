@@ -54,10 +54,13 @@ class APortfolioProjectCharacter : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AttackAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LookOnAction;
 public:
 	APortfolioProjectCharacter();
 	virtual void Tick(float DeltaSeconds) override;
-	
+	UPROPERTY(EditAnywhere)
+	AActor * OnlyEnemy;
 protected:
 
 	/** Called for movement input */
@@ -68,7 +71,9 @@ protected:
 		
 	void Sprint(const FInputActionValue& Value);
 
-
+	void LockOn();
+	void ToggleLockOn(const FInputActionValue& Value);
+	AActor* CurrentFollowedActor;
 	
 protected:
 	// APawn interface
@@ -82,7 +87,7 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
+ 
 #pragma region Values
 
 private:
@@ -102,5 +107,6 @@ public:
 #pragma endregion
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimatorComponent * AnimatorComponent;
+	UCameraComponent * camera;
 };
 

@@ -31,9 +31,10 @@ void UCombatBase::BeginPlay()
 	list = GetOwner()->GetComponentsByTag(UMeshComponent::StaticClass(),FName("Weapon"));
 	if(!list.IsEmpty())
 	{
-		WeaponMesh = Cast<UMeshComponent>(list[0]);
-		WeaponMesh->OnComponentBeginOverlap.AddDynamic(this,&UCombatBase::OnOverlapBegin);
+		WeaponMesh = Cast<UStaticMeshComponent>(list[0]);
+		WeaponMesh->SetGenerateOverlapEvents(true);
 		WeaponMesh->SetActive(false);
+		// UE_LOG(LogTemp, Warning, TEXT("Has WeaponMesh"));
 	}
 	AnimatorComponent  = Cast<UAnimatorComponent>(GetOwner()->GetComponentByClass(UAnimatorComponent::StaticClass()));
 	health = Cast<UHealthComponent>(GetOwner()->GetComponentByClass(UHealthComponent::StaticClass()));
@@ -44,22 +45,24 @@ void UCombatBase::BeginPlay()
 void UCombatBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	if(!AnimatorComponent)return;
 	AnimatorComponent->bIsBlocking = (bIsBlocking || bBlockingTimeIsRunningOut) && !bIsAttacking;
 	AnimatorComponent->bIsAttacking = bIsAttacking;
 	// ...
 	// AnimatorComponent->bIsBlocking = bIsBlocking || bBlockingTimeIsRunningOut;
-	UE_LOG(LogTemp, Warning, TEXT("Status blocking:%c") ,bIsBlocking || bBlockingTimeIsRunningOut);
-
+	if(bIsAttacking)
+	{
+		//Spawn CollisionBoxes
+		
+	}
 }
 
 void UCombatBase::Attack(const FInputActionValue& Value)
 {
-	if(bIsAttacking)return;
-	// if(!WeaponMesh)return
-	UE_LOG(LogTemp, Warning, TEXT("Attack Called"));
+	if(bIsAttacking || !WeaponMesh)return;
+	// UE_LOG(LogTemp, Warning, TEXT("Attack Called"));
 	//Active Mesh of Weapon
-	// WeaponMesh->SetActive(true);
+	WeaponMesh->SetActive(true);
 	AnimatorComponent->bIsAttacking = true;
 	//TODO the rest
 }
@@ -69,20 +72,25 @@ void UCombatBase::Attack(const FInputActionValue& Value)
  */
 void UCombatBase::AttackOver()
 {
-	if(!WeaponMesh)return;
+	if(!WeaponMesh || !AnimatorComponent)return;
 	//Alternatively this can be done with a timer. Where it is known how long each attack takes.
 	WeaponMesh->SetActive(false);
 	bIsAttacking = false;
 	AnimatorComponent->bIsAttacking = false;
-	UE_LOG(LogTemp, Warning, TEXT("Attack Over"));
+	// UE_LOG(LogTemp, Warning, TEXT("Attack Over"));
 
 }
 
+
 void UCombatBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if(!OtherComp->ComponentHasTag("Weapon"))return;
+    UE_LOG(LogTemp, Warning, TEXT("something collided with the sword"));
+    if(!OtherComp->ComponentHasTag("Weapon") || OtherActor == GetOwner())return;
+	if(bIFramesActive)return;
 	GettingAttacked();
+	GetWorld()->GetTimerManager().SetTimer(InvincibleTimeCountdown,this, &UCombatBase::CanBeHitAgain, false);
+	bIFramesActive = true;
 	UE_LOG(LogTemp, Warning, TEXT("collided with ur mom"));
 
 }
@@ -124,18 +132,20 @@ void UCombatBase::GettingAttacked()
 	{
 		//Perfect Parry
 		//Particles
+		UE_LOG(LogTemp, Warning, TEXT("Fullblock"));
 	}
 	else if(bIsBlocking)
 	{
 		//PartTimeDmg
 		health->UpdateBlock(1);
-		
+		UE_LOG(LogTemp, Warning, TEXT("Blocked"));
 	}
 	else
 	{
 		//Not blocking full dmg
 		health->UpdateHealth(1);
 		health->GettingHit();
+		UE_LOG(LogTemp, Warning, TEXT("Got fully hit"));
 		//Get pushed back
 	}
 }
@@ -144,6 +154,9 @@ void UCombatBase::TimerMethod()
 {
 	bBlockingTimeIsRunningOut = false;
 	bIsBlocking = false;
-
 }
 
+void UCombatBase::CanBeHitAgain()
+{
+	bIFramesActive = false;
+}
