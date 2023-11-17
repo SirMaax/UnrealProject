@@ -34,11 +34,11 @@ public:
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 # pragma region Block
-private:
+protected:
 	bool bIsBlocking;
 	bool bBlockingTimeIsRunningOut;
 	bool bCanBlock;
-	
+private:
 	FTimerHandle TimerCountdownTimeForPerfectBlock;
 	FDateTime TimeStartedBlock;
 	UPROPERTY(EditAnywhere, Category="Blocking")
@@ -47,19 +47,26 @@ private:
 	float TimeNotBlockingAfterNotPressingButtonAnymore;
 	// int HowOftenWasBlockUsedRecently;
 	void TimerMethod();
-
+	FTimerHandle TimerAttackDuration;
+	UStaticMeshComponent* WeaponMesh;
+	bool bIsAttacking;	
 public:
 	void StartBlocking();
 	void EndBlocking();
 	void GettingAttacked();
+	void SetBlockStatus(bool block);
+	void SetAttackStatus(bool attack);
+	bool GetIsAttacking();
 # pragma endregion
 
 # pragma region Attack
 	void Attack(const FInputActionValue& Value);
+	void Attack(int AttackIndex);
 	void AttackOver();
+
+	UPROPERTY(EditAnywhere)
+	float AttackTimes[];
 	
-	UStaticMeshComponent* WeaponMesh;
-	bool bIsAttacking;	
 # pragma endregion 
 
 

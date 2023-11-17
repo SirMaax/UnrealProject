@@ -50,11 +50,7 @@ void UCombatBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	AnimatorComponent->bIsAttacking = bIsAttacking;
 	// ...
 	// AnimatorComponent->bIsBlocking = bIsBlocking || bBlockingTimeIsRunningOut;
-	if(bIsAttacking)
-	{
-		//Spawn CollisionBoxes
-		
-	}
+
 }
 
 void UCombatBase::Attack(const FInputActionValue& Value)
@@ -65,6 +61,19 @@ void UCombatBase::Attack(const FInputActionValue& Value)
 	WeaponMesh->SetActive(true);
 	AnimatorComponent->bIsAttacking = true;
 	//TODO the rest
+}
+
+void UCombatBase::Attack(int AttackIndex = 0)
+{
+	if(bIsAttacking || !WeaponMesh)return;
+	// UE_LOG(LogTemp, Warning, TEXT("Attack Called"));
+	//Active Mesh of Weapon
+	WeaponMesh->SetActive(true);
+	//Todo Change dependent on which attack
+	AnimatorComponent->bIsAttacking = true;
+	//TODO the rest
+	GetWorld()->GetTimerManager().SetTimer
+		(TimerAttackDuration,this,&UCombatBase::AttackOver,AttackTimes[AttackIndex],false);
 }
 
 /**
@@ -159,4 +168,19 @@ void UCombatBase::TimerMethod()
 void UCombatBase::CanBeHitAgain()
 {
 	bIFramesActive = false;
+}
+
+void UCombatBase::SetBlockStatus(bool blocking)
+{
+	bIsBlocking = blocking;
+}
+
+void UCombatBase::SetAttackStatus(bool attack)
+{
+	bIsAttacking = attack;
+}
+
+bool UCombatBase::GetIsAttacking()
+{
+	return bIsAttacking;
 }

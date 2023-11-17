@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CombatBase.h"
 #include "Components/ActorComponent.h"
 #include "Combat_AI.generated.h"
 
@@ -19,6 +20,12 @@ public:
 	UCombat_AI();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY(EditAnywhere)
+	float AttackRange;
+	UPROPERTY(EditAnywhere)
+	float MovementSpeed;
+	UPROPERTY(EditAnywhere)
+	float TimeInState[];
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -32,12 +39,21 @@ private:
 	};
 	AI_State CurrentState;
 	int AmountOfTimesLeftInState;
+
 	
 	void ActPassiveState();
-	void ActAgressiveState();
-	void ActDefensiveState();
+	void ActAgressiveState(float DeltaTime);
+	void ActDefensiveState(float DeltaTime);
 	void ChangeState();
-
+	void MoveInDirection(FVector direction, float force);
+	void ExecuteAfterStateSwitch();
 	FTimerHandle TimerHandleChangeState;
 	float TimeTillStateChange;
+	
+	UCombatBase Combatbase;
+
+	AActor* Player;
+	
+	
+	
 };
