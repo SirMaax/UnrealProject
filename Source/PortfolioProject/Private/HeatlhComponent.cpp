@@ -4,6 +4,7 @@
 #include "HeatlhComponent.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Microsoft/AllowMicrosoftPlatformTypes.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -22,6 +23,8 @@ void UHealthComponent::BeginPlay()
 	Super::BeginPlay();
 
 	AnimatorComponent  = Cast<UAnimatorComponent>(GetOwner()->GetComponentByClass(UAnimatorComponent::StaticClass()));
+	MaxHealth = Health;
+	MaxBlock = Block;
 }
 
 
@@ -45,14 +48,25 @@ void UHealthComponent::GettingHit()
 	AnimatorComponent->GotHit();
 }
 
+float UHealthComponent::GetHealthPercent()
+{
+	return Health/MaxHealth;
+}
+
 void UHealthComponent::Die()
 {
-	UGameplayStatics::OpenLevel(this,FName(GetWorld()->GetName()),false);
+	GetOwner()->Destroy();
+	if(bIsMainCharacter)UGameplayStatics::OpenLevel(this,FName(GetWorld()->GetName()),false);
 }
 
 void UHealthComponent::UpdateUI()
 {
 	//Update UI here :D
+}
+
+float UHealthComponent::GetBlockPercent()
+{
+	return Block/MaxBlock;
 }
 
 void UHealthComponent::UpdateBlock(float amount)
@@ -65,4 +79,6 @@ void UHealthComponent::BreakPosture()
 {
 		
 }
+
+
 

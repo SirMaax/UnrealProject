@@ -4,7 +4,10 @@
 #include "Combat_AI.h"
 
 #include "ImathMath.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+
 
 // Sets default values for this component's properties
 UCombat_AI::UCombat_AI()
@@ -13,7 +16,20 @@ UCombat_AI::UCombat_AI()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	Player = Cast<AActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
+	
+}
+
+// Called when the game starts
+void UCombat_AI::BeginPlay()
+{
+	Super::BeginPlay();
+	Player = UGameplayStatics::GetPlayerCharacter(GetWorld(),0);
+	Combatbase = Cast<UCombatBase>(GetOwner()->GetComponentByClass(UCombatBase::StaticClass()));
+	AnimatorComponent = Cast<UAnimatorComponent>(GetOwner()->GetComponentByClass(UAnimatorComponent::StaticClass()));
+
+	CurrentState = Agressiv;
+	AmountOfTimesLeftInState = 3;
+	// ...
 }
 
 // Called every frame
@@ -21,19 +37,17 @@ void UCombat_AI::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	AnimatorComponent->Speed = (LastPosition - GetOwner()->GetActorLocation()).Length() * MovementSpeed;
+	LastPosition = GetOwner()->GetActorLocation();
+	
 	if(CurrentState==Passive)ActPassiveState();
 	else if(CurrentState==Agressiv)ActAgressiveState(DeltaTime);
 	else if(CurrentState==Defensive)ActDefensiveState(DeltaTime);
-
+	if(!Combatbase->GetIsAttacking())TurnTowardsPlayer();
 	if(AmountOfTimesLeftInState<=0)ChangeState();
-}
 
-// Called when the game starts
-void UCombat_AI::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
+	// float speed = Cast<ACharacter>(GetOwner())->GetCharacterMovement()->Velocity.Length();
+	
 }
 
 void UCombat_AI::ActPassiveState()
@@ -43,21 +57,23 @@ void UCombat_AI::ActPassiveState()
 
 void UCombat_AI::ActAgressiveState(float DeltaTime)
 {
-	if(Combatbase.GetIsAttacking())return;
+	UE_LOG(LogTemp, Warning, TEXT("Current State %i"),Combatbase->GetIsAttacking());
+	
+	if(Combatbase->GetIsAttacking())return;
 	FVector direction =(Player->GetActorLocation() - GetOwner()->GetActorLocation());
 	float distanceToPlayer = direction.Length();
+	direction.Normalize();
 	//Enemy not in attackrange -> move closer
-	if(distanceToPlayer >= AttackRange)MoveInDirection(Player->GetActorLocation(),MovementSpeed * DeltaTime);
+	if(distanceToPlayer >= AttackRange)MoveInDirection(direction,MovementSpeed * DeltaTime);
 	//If in range choose one possible Attack to perform
 	else
 	{
 		AmountOfTimesLeftInState -= 1;
 		if(AmountOfTimesLeftInState<=0)return;
-		Combatbase.SetAttackStatus(true);
-		
+		// Combatbase->SetAttackStatus(true);
 		//Choose random attack, maybe lower chance for the same attack as the last attack
 		int randomAttack = 0;
-		Combatbase.Attack(randomAttack);
+		Combatbase->Attack(randomAttack);
 		
 	}
 }
@@ -66,13 +82,14 @@ void UCombat_AI::ActDefensiveState(float deltaTime)
 {
 	FVector direction =(Player->GetActorLocation() - GetOwner()->GetActorLocation());
 	float distance = direction.Length();
-	
+	direction.Normalize();
 	//Move further away from player
-	if(distance <= AttackRange)MoveInDirection(-direction,MovementSpeed/2 * deltaTime);
+	if(distance <= AttackRange*4)MoveInDirection(-direction,MovementSpeed/2 * deltaTime);
 }
 
 void UCombat_AI::ChangeState()
 {
+	if(!bAllowStateChange)return;
 	//State changes after certain time or after specified time runs out
 	if(GetWorld()->GetTimerManager().IsTimerActive(TimerHandleChangeState))
 	{
@@ -93,7 +110,7 @@ void UCombat_AI::ChangeState()
 		
 		break;
 	case Defensive:
-		Combatbase.SetBlockStatus(false);
+		Combatbase->SetBlockStatus(false);
 		if(chance <= 15)CurrentState= Defensive;
 		else if (chance <=85)CurrentState = Agressiv;
 		else CurrentState = Passive;
@@ -101,13 +118,17 @@ void UCombat_AI::ChangeState()
 	default: ;
 	}
 	ExecuteAfterStateSwitch();
-}
+	if(CurrentState == Passive)UE_LOG(LogTemp, Warning, TEXT("Current State passiv"));
+	if (CurrentState == Agressiv)UE_LOG(LogTemp, Warning, TEXT("Current State aggressiv"));
+	if (CurrentState == Defensive)UE_LOG(LogTemp, Warning, TEXT("Current state defensive"));
+}	
 
 void UCombat_AI::ExecuteAfterStateSwitch()
 {
 	float time;
 	switch (CurrentState) {
 		case Passive:
+			AmountOfTimesLeftInState=1;
 			time = FMath::RandRange(TimeInState[Passive]/2,TimeInState[Passive]);
 			GetWorld()->GetTimerManager().SetTimer(TimerHandleChangeState,
 				this,&UCombat_AI::ChangeState,time,false);
@@ -119,13 +140,21 @@ void UCombat_AI::ExecuteAfterStateSwitch()
 				this,&UCombat_AI::ChangeState,TimeInState[Agressiv],false);
 			break;
 		case Defensive:
-			Combatbase.SetBlockStatus(true);
+			AmountOfTimesLeftInState=1;
+			Combatbase->SetBlockStatus(true);
 			GetWorld()->GetTimerManager().SetTimer(TimerHandleChangeState,
 				this,&UCombat_AI::ChangeState,TimeInState[Defensive],false);
 			break;
 		
 	default: ;
 	}
+}
+
+void UCombat_AI::TurnTowardsPlayer()
+{
+	FVector direction = Player->GetActorLocation() - GetOwner()->GetActorLocation();
+	FRotator rotation = direction.Rotation();
+	GetOwner()->SetActorRotation(rotation);
 }
 
 void UCombat_AI::MoveInDirection(FVector direction, float force)

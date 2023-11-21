@@ -11,7 +11,6 @@ UCombatBase::UCombatBase()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 	// ...
 }
 
@@ -69,9 +68,11 @@ void UCombatBase::Attack(int AttackIndex = 0)
 	// UE_LOG(LogTemp, Warning, TEXT("Attack Called"));
 	//Active Mesh of Weapon
 	WeaponMesh->SetActive(true);
+	bIsAttacking = true;
 	//Todo Change dependent on which attack
 	AnimatorComponent->bIsAttacking = true;
 	//TODO the rest
+	
 	GetWorld()->GetTimerManager().SetTimer
 		(TimerAttackDuration,this,&UCombatBase::AttackOver,AttackTimes[AttackIndex],false);
 }
@@ -82,10 +83,15 @@ void UCombatBase::Attack(int AttackIndex = 0)
 void UCombatBase::AttackOver()
 {
 	if(!WeaponMesh || !AnimatorComponent)return;
+	// if(!AnimatorComponent->bIsAttacking)return;
+	// UAnimInstance * anim = Cast<UAnimInstance>(GetOwner()->GetComponentByClass(UAnimInstance::StaticClass()));
+	// UAnimMontage * animation = anim->GetCurrentActiveMontage();
+	// float remainingTime = animation->GetPlayLength() - anim->Montage_GetPosition(animation);
+	// if(remainingTime >0)return;
+	
 	//Alternatively this can be done with a timer. Where it is known how long each attack takes.
 	WeaponMesh->SetActive(false);
 	bIsAttacking = false;
-	AnimatorComponent->bIsAttacking = false;
 	// UE_LOG(LogTemp, Warning, TEXT("Attack Over"));
 
 }

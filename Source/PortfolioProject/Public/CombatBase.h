@@ -41,6 +41,7 @@ protected:
 private:
 	FTimerHandle TimerCountdownTimeForPerfectBlock;
 	FDateTime TimeStartedBlock;
+	
 	UPROPERTY(EditAnywhere, Category="Blocking")
 	float SecondsTillFullBlock;
 	UPROPERTY(EditAnywhere, Category="Blocking")
@@ -49,7 +50,8 @@ private:
 	void TimerMethod();
 	FTimerHandle TimerAttackDuration;
 	UStaticMeshComponent* WeaponMesh;
-	bool bIsAttacking;	
+	bool bIsAttacking;
+	
 public:
 	void StartBlocking();
 	void EndBlocking();
@@ -65,8 +67,7 @@ public:
 	void AttackOver();
 
 	UPROPERTY(EditAnywhere)
-	float AttackTimes[];
-	
+	float AttackTimes[3];
 # pragma endregion 
 
 

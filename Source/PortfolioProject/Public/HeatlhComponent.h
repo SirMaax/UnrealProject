@@ -29,14 +29,23 @@ public:
 	bool IsPostureBroken;
 	UStaticMesh* mesh;
 
+# pragma region General
+	UPROPERTY(EditAnywhere)
+	bool bIsMainCharacter;
+# pragma endregion 
+
 # pragma region Health
 private:
 	UPROPERTY(EditAnywhere)
 	float Health;
-	float MaxHealth;
+	
 public:
+	UPROPERTY(EditAnywhere);
+	float MaxHealth;
 	void UpdateHealth(float amount);
 	void GettingHit();
+	UFUNCTION(BlueprintCallable)
+	float GetHealthPercent();
 private:
 	void Die();
 	void UpdateUI();
@@ -49,6 +58,8 @@ private:
 	float MaxBlock;
 
 public:
+	UFUNCTION(BlueprintCallable)
+	float GetBlockPercent();
 	void UpdateBlock(float amount);
 	
 private:
