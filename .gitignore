@@ -49,6 +49,9 @@ SourceArt/**/*.tga
 Binaries/*
 Plugins/*/Binaries/*
 Content/Assets/*
+Content/__ExternalActors__/*
+Content/Megascans/*
+Content/StarterContent/Textures/*
 # Builds
 Build/*
 
