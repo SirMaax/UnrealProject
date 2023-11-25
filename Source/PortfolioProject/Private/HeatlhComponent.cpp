@@ -32,20 +32,31 @@ void UHealthComponent::BeginPlay()
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Block+=BlockRegen * DeltaTime;
+	FMathf::Clamp(Block,0,MaxBlock);
 	
-	// ...
 }
 
 void UHealthComponent::UpdateHealth(float amount)
 {
-	Health-=amount;
+	int multiplier = 1;
+	if(bPostureIsBroken)multiplier = 3;
+	Health+=amount * multiplier;
 	if(Health <= 0 )Die();
 }
 
 void UHealthComponent::GettingHit()
 {
 	if(!AnimatorComponent)return;
-	AnimatorComponent->GotHit();
+	AnimatorComponent->bGotHit = true;
+	FTimerHandle temp;
+	GetWorld()->GetTimerManager().SetTimer(temp,this, &UHealthComponent::GettingHitFinished, 0.5f,false);
+	
+}
+
+void UHealthComponent::GettingHitFinished()
+{
+	AnimatorComponent->bGotHit = false;
 }
 
 float UHealthComponent::GetHealthPercent()
@@ -71,14 +82,26 @@ float UHealthComponent::GetBlockPercent()
 
 void UHealthComponent::UpdateBlock(float amount)
 {
-	Block-=amount;
+	Block+=amount;
 	if(Block <= 0)BreakPosture();
+	
 }
 
 void UHealthComponent::BreakPosture()
 {
-		
+	if(bPostureIsBroken)return;
+	FTimerHandle handle;
+	bPostureIsBroken = true;
+	GetWorld()->GetTimerManager().SetTimer(handle, this ,&UHealthComponent::RestorePosture,1.5,false);	
 }
+
+void UHealthComponent::RestorePosture()
+{
+	Block = MaxBlock;
+	bPostureIsBroken = false;
+}
+
+
 
 
 

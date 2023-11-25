@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include "NiagaraSystem.h"
 #include "AnimatorComponent.h"
 #include "EnhancedInputComponent.h"
 #include "HeatlhComponent.h"
 #include "Components/ActorComponent.h"
+#include "NiagaraComponent.h"
 #include "CombatBase.generated.h"
 
 
@@ -55,7 +57,7 @@ private:
 public:
 	void StartBlocking();
 	void EndBlocking();
-	void GettingAttacked();
+	void GettingAttacked(UCombatBase * base, UHealthComponent * otherHealth);
 	void SetBlockStatus(bool block);
 	void SetAttackStatus(bool attack);
 	bool GetIsAttacking();
@@ -84,7 +86,16 @@ private:
 	UHealthComponent * health;
 	UAnimatorComponent * AnimatorComponent;
 	// UPROPERTY(EditAnywhere, Category="Behavior")
+public:
+	UPROPERTY(EditAnywhere, Category = "Particles")
+	class UNiagaraSystem* particleSystem;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+	class UNiagaraSystem* bloodParticle;
 	# pragma endregion
+	UPROPERTY(EditAnywhere)
+	FVector PositionSpark;
+	UPROPERTY(EditAnywhere)
+	FVector PositionBlood;
 	
 	
 };

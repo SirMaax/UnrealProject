@@ -19,6 +19,8 @@ public:
 
     UPROPERTY(EditAnywhere)
     bool bAllowStateChange;
+	UPROPERTY()
+	bool bCanAct;
 	// Sets default values for this component's properties
 	UCombat_AI();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

@@ -30,8 +30,7 @@ public:
 	bool bIsAttacking;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsBlocking;
-	UFUNCTION(BlueprintCallable)
-	void GotHit();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGotHit;
 	
-	UAnimInstance * AnimInstance;
 };

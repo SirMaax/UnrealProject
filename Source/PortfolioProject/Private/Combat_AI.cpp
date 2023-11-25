@@ -36,7 +36,7 @@ void UCombat_AI::BeginPlay()
 void UCombat_AI::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	// if(!bCanAct)return;
 	AnimatorComponent->Speed = (LastPosition - GetOwner()->GetActorLocation()).Length() * MovementSpeed;
 	LastPosition = GetOwner()->GetActorLocation();
 	
@@ -57,8 +57,6 @@ void UCombat_AI::ActPassiveState()
 
 void UCombat_AI::ActAgressiveState(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Current State %i"),Combatbase->GetIsAttacking());
-	
 	if(Combatbase->GetIsAttacking())return;
 	FVector direction =(Player->GetActorLocation() - GetOwner()->GetActorLocation());
 	float distanceToPlayer = direction.Length();

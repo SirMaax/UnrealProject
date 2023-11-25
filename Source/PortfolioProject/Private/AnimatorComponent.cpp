@@ -32,8 +32,4 @@ void UAnimatorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
-void UAnimatorComponent::GotHit()
-{
-	
-}
 

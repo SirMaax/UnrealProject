@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <mediaobj.h>
+
 #include "CoreMinimal.h"
 #include "AnimatorComponent.h"
 #include "Components/ActorComponent.h"
@@ -55,16 +57,20 @@ private:
 private:
 	UPROPERTY(EditAnywhere)
 	float Block;
+	UPROPERTY(EditAnywhere)
+	float BlockRegen;
 	float MaxBlock;
-
+	bool bPostureIsBroken;
+	void RestorePosture();
 public:
 	UFUNCTION(BlueprintCallable)
 	float GetBlockPercent();
 	void UpdateBlock(float amount);
 	
-private:
+public:
 	void BreakPosture();
+	void GettingHitFinished();
 # pragma endregion
-
+	
 	UAnimatorComponent * AnimatorComponent;
 };
